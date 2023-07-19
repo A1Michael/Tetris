@@ -1,25 +1,47 @@
 import random
-
 from game_settings import *
 
 # we need to inherit from pygame in order to use the sprites for the blocks
 class Block(pygame.sprite.Sprite):
     # the position of the block on the playing field using the coordinates i.e (0,3)
     def __init__(self, tetromino, position):
-        super().__init__(tetromino.tetris.sprites)
         self.tetromino = tetromino
         self.position = vector_2D(position) + INIT_POS
-        self.image = pygame.Surface([TILE_SIZE, TILE_SIZE])
-        pygame.draw.rect(self.image, 'blue', (1, 1, TILE_SIZE - 2, TILE_SIZE -2), border_radius=8)
+        self.next_tetris_pos = vector_2D(position) + NEXT_POS
+        super().__init__(tetromino.tetris.sprites)
+        self.image = tetromino.image
+        #self.image = pygame.Surface([TILE_SIZE, TILE_SIZE])
+        #pygame.draw.rect(self.image, 'blue', (1, 1, TILE_SIZE - 2, TILE_SIZE -2), border_radius=8)
         self.rect = self.image.get_rect()
         self.alive = True
+        self.sfx_image = self.image.copy()
+        self.sfx_image.set_alpha(110)
+        self.sfx_speed = random.uniform(0.2, 0.6)
+        self.sfx_cycles = random.randrange(6, 8)
+        self.cycle_counter = 0
+
+    def sfx_end(self):
+        if self.tetromino.tetris.game.anim_trigger:
+            self.cycle_counter += 1
+            if self.cycle_counter > self.sfx_cycles:
+                self.cycle_counter = 0
+                return True
+    def run_sfx(self):
+        self.image = self.sfx_image
+        self.position.y = self.sfx_speed
+        self.image = pygame.transform.rotate(self.image, pygame.time.get_ticks() * self.sfx_speed)
+
 
     def is_alive(self):
         if not self.alive:
-            self.kill()
+            if not self.sfx_end():
+                self.run_sfx()
+            else:
+                self.kill()
 
     def set_rect_pos(self):
-        self.rect.topleft = self.position * TILE_SIZE
+        position = [self.next_tetris_pos, self.position][self.tetromino.current]
+        self.rect.topleft = position * TILE_SIZE
 
     def rotate(self, pivot_point):
         translated = self.position - pivot_point
@@ -43,11 +65,14 @@ class Block(pygame.sprite.Sprite):
 
 
 class Tetromino:
-    def __init__(self, tetris):
+    def __init__(self, tetris, current_tetris=True):
         self.tetris = tetris
         self.shape = random.choice(list(SHAPES.keys()))
+        self.image = random.choice(tetris.game.sprite) # ...
         self.blocks = [Block(self,pos) for pos in SHAPES[self.shape]]
         self.landed = False
+        self.current = current_tetris
+
 
     def is_colliding(self, block_pos):
         # we will be performing the check on all four tetris blocks

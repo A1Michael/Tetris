@@ -7,6 +7,10 @@ TILE_SIZE = 50
 FIELD_SIZE = FIELD_W, FIELD_H = 10, 20
 FIELD_RES = FIELD_W * TILE_SIZE, FIELD_H * TILE_SIZE
 
+# Since we can only move left, right and down. we only need 3 direction represented using vector coordinates
+MOVEMENT_DIR = {'left': vector_2D(-1, 0), 'right': vector_2D(1, 0), 'down': vector_2D(0, 1)}
+ANIMATION_INTERVAL = 150  # in milliseconds
+
 # Dictionary of block shapes
 SHAPES = {
     'T': [(0, 0), (-1, 0), (1, 0), (0, -1)],
@@ -18,4 +22,4 @@ SHAPES = {
 }
 
 # Initial pos will be used to place the block in the middle of the field
-INIT_POS = vector_2D(FIELD_SIZE)// 2
+INIT_POS = vector_2D(FIELD_W // 2 - 1, 0)
